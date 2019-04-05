@@ -48,10 +48,11 @@ class Trainer(object):
 
         log_probs_list = []
         for dev_images, _ in self.dev_loader.get_iter():
-            dev_images = Variable(dev_images.cuda(), volatile=True)
+            dev_images = Variable(dev_images.cuda(), requires_grad=False)
             dev_images = (dev_images - 0.5) / 0.5
             dev_images = dev_images.view(-1, 1, 28, 28)
-            logits = self.pixelcnn(dev_images)
+            with torch.no_grad():
+                logits = self.pixelcnn(dev_images)
             log_probs = - pixelcnn_loss.discretized_mix_logistic_loss_c1(dev_images.permute(0, 2, 3, 1), logits.permute(0, 2, 3, 1), sum_all=False)
             log_probs = log_probs.data.cpu().numpy()
             log_probs_list.append(log_probs)
