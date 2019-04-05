@@ -53,7 +53,7 @@ class DataLoader(object):
                 yield ret_images, ret_labels
             if not inf: break
 
-    def next(self):
+    def __next__(self):
         return next(self.unlimit_gen)
 
     def get_iter(self):
@@ -74,7 +74,7 @@ def get_mnist_loaders(config):
     for i in range(10):
         mask[np.where(labels == i)[0][: config.size_labeled_data / 10]] = True
     labeled_indices, unlabeled_indices = indices[mask], indices[~ mask]
-    print 'labeled size', labeled_indices.shape[0], 'unlabeled size', unlabeled_indices.shape[0]
+    print('labeled size', labeled_indices.shape[0], 'unlabeled size', unlabeled_indices.shape[0])
 
     labeled_loader = DataLoader(config, training_set, labeled_indices, config.train_batch_size)
     unlabeled_loader = DataLoader(config, training_set, unlabeled_indices, config.train_batch_size)
@@ -108,7 +108,7 @@ def get_svhn_loaders(config):
         mask[np.where(labels == i)[0][: config.size_labeled_data / 10]] = True
     # labeled_indices, unlabeled_indices = indices[mask], indices[~ mask]
     labeled_indices, unlabeled_indices = indices[mask], indices
-    print 'labeled size', labeled_indices.shape[0], 'unlabeled size', unlabeled_indices.shape[0], 'dev size', len(dev_set)
+    print('labeled size', labeled_indices.shape[0], 'unlabeled size', unlabeled_indices.shape[0], 'dev size', len(dev_set))
 
     labeled_loader = DataLoader(config, training_set, labeled_indices, config.train_batch_size)
     unlabeled_loader = DataLoader(config, training_set, unlabeled_indices, config.train_batch_size)
@@ -135,7 +135,7 @@ def get_cifar_loaders(config):
         mask[np.where(labels == i)[0][: config.size_labeled_data / 10]] = True
     # labeled_indices, unlabeled_indices = indices[mask], indices[~ mask]
     labeled_indices, unlabeled_indices = indices[mask], indices
-    print 'labeled size', labeled_indices.shape[0], 'unlabeled size', unlabeled_indices.shape[0], 'dev size', len(dev_set)
+    print('labeled size', labeled_indices.shape[0], 'unlabeled size', unlabeled_indices.shape[0], 'dev size', len(dev_set))
 
     labeled_loader = DataLoader(config, training_set, labeled_indices, config.train_batch_size)
     unlabeled_loader = DataLoader(config, training_set, unlabeled_indices, config.train_batch_size_2)

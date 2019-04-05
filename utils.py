@@ -45,7 +45,7 @@ def one_hot(logits, labels):
     return mask
 
 def grad_norm(parameters, norm_type=2):
-    parameters = list(filter(lambda p: p.grad is not None, parameters))
+    parameters = list([p for p in parameters if p.grad is not None])
     norm_type = float(norm_type)
     if norm_type == float('inf'):
         total_norm = max(p.grad.data.abs().max() for p in parameters)

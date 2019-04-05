@@ -26,7 +26,7 @@ class Trainer(object):
 
     def __init__(self, config, args):
         self.config = config
-        for k, v in args.__dict__.items():
+        for k, v in list(args.__dict__.items()):
             setattr(self.config, k, v)
         setattr(self.config, 'save_dir', '{}_log'.format(self.config.dataset))
 
@@ -61,9 +61,9 @@ class Trainer(object):
         self.unl_ploss_stats = log_probs.min(), log_probs.max(), log_probs.mean(), log_probs.var()
         cut_point = int(log_probs.shape[0] * 0.1)
         self.ploss_th = float(np.partition(log_probs, cut_point)[cut_point])
-        print 'ploss_th', self.ploss_th
+        print('ploss_th', self.ploss_th)
 
-        print self.dis
+        print(self.dis)
 
     def _get_vis_images(self, labels):
         labels = labels.data.cpu()
@@ -75,10 +75,10 @@ class Trainer(object):
         self.dis.train()
         self.gen.train()
 
-        lab_images, lab_labels = self.labeled_loader.next()
+        lab_images, lab_labels = next(self.labeled_loader)
         lab_images, lab_labels = Variable(lab_images.cuda()), Variable(lab_labels.cuda())
 
-        unl_images, _ = self.unlabeled_loader.next()
+        unl_images, _ = next(self.unlabeled_loader)
         unl_images = Variable(unl_images.cuda())
 
         noise = Variable(torch.Tensor(unl_images.size(0), config.noise_size).uniform_().cuda())
@@ -109,7 +109,7 @@ class Trainer(object):
         self.dis_optimizer.step()
 
         ##### train Gen and Enc
-        unl_images, _ = self.unlabeled_loader2.next()
+        unl_images, _ = next(self.unlabeled_loader2)
         unl_images = Variable(unl_images.cuda())
         noise = Variable(torch.Tensor(unl_images.size(0), config.noise_size).uniform_().cuda())
         gen_images = self.gen(noise)
@@ -192,7 +192,7 @@ class Trainer(object):
 
         images = []
         for i in range(500 / self.config.train_batch_size):
-            unl_images, _ = self.unlabeled_loader.next()
+            unl_images, _ = next(self.unlabeled_loader)
             images.append(unl_images)
         images = torch.cat(images, 0)
 
@@ -203,7 +203,7 @@ class Trainer(object):
     def train(self):
         config = self.config
 
-        print config.train_batch_size % len(self.unlabeled_loader)
+        print(config.train_batch_size % len(self.unlabeled_loader))
         self.param_init()
 
         self.iter_cnt = 0
@@ -224,8 +224,8 @@ class Trainer(object):
 
             iter_vals = self._train(iter=iter)
 
-            for k, v in iter_vals.items():
-                if not monitor.has_key(k):
+            for k, v in list(iter_vals.items()):
+                if k not in monitor:
                     monitor[k] = 0.
                 monitor[k] += v
 
@@ -239,14 +239,14 @@ class Trainer(object):
                 min_dev_incorrect = min(min_dev_incorrect, dev_incorrect)
                 disp_str = '#{}\ttrain: {:.4f}, {} | dev: {:.4f}, {} | best: {}'.format(
                         iter, train_loss, train_incorrect, dev_loss, dev_incorrect, min_dev_incorrect)
-                for k, v in monitor.items():
+                for k, v in list(monitor.items()):
                     disp_str += ' | {}: {:.4f}'.format(k, v / config.eval_period)
 
                 disp_str += ' | lr: dis {:.5f}, gen {:.5f}'.format(
                     self.dis_optimizer.param_groups[0]['lr'], self.gen_optimizer.param_groups[0]['lr'])
                 monitor = OrderedDict()
 
-                print disp_str
+                print(disp_str)
 
                 noise = Variable(torch.Tensor(400, self.config.noise_size).uniform_().cuda(), volatile=True)
                 images = self.gen(noise)
@@ -255,8 +255,8 @@ class Trainer(object):
                 logits = self.pixelcnn(images)
                 log_probs = - pixelcnn_loss.discretized_mix_logistic_loss_c1(images.permute(0, 2, 3, 1), logits.permute(0, 2, 3, 1), sum_all=False).data.cpu()
                 gen_ploss_stats = log_probs.min(), log_probs.max(), log_probs.mean(), log_probs.var()
-                print 'gen stats', gen_ploss_stats
-                print 'unl stats', self.unl_ploss_stats
+                print('gen stats', gen_ploss_stats)
+                print('unl stats', self.unl_ploss_stats)
 
             iter += 1
             self.iter_cnt += 1

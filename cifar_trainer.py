@@ -24,7 +24,7 @@ class Trainer(object):
 
     def __init__(self, config, args):
         self.config = config
-        for k, v in args.__dict__.items():
+        for k, v in list(args.__dict__.items()):
             setattr(self.config, k, v)
         setattr(self.config, 'save_dir', '{}_log'.format(self.config.dataset))
 
@@ -54,7 +54,7 @@ class Trainer(object):
         self.logger = open(log_path, 'wb')
         self.logger.write(disp_str)
 
-        print self.dis
+        print(self.dis)
 
     def _get_vis_images(self, labels):
         labels = labels.data.cpu()
@@ -68,10 +68,10 @@ class Trainer(object):
         self.enc.train()
 
         ##### train Dis
-        lab_images, lab_labels = self.labeled_loader.next()
+        lab_images, lab_labels = next(self.labeled_loader)
         lab_images, lab_labels = Variable(lab_images.cuda()), Variable(lab_labels.cuda())
 
-        unl_images, _ = self.unlabeled_loader.next()
+        unl_images, _ = next(self.unlabeled_loader)
         unl_images = Variable(unl_images.cuda())
 
         noise = Variable(torch.Tensor(unl_images.size(0), config.noise_size).uniform_().cuda())
@@ -212,7 +212,7 @@ class Trainer(object):
 
         images = []
         for i in range(500 / self.config.train_batch_size):
-            lab_images, _ = self.labeled_loader.next()
+            lab_images, _ = next(self.labeled_loader)
             images.append(lab_images)
         images = torch.cat(images, 0)
 
@@ -251,8 +251,8 @@ class Trainer(object):
 
             iter_vals = self._train()
 
-            for k, v in iter_vals.items():
-                if not monitor.has_key(k):
+            for k, v in list(iter_vals.items()):
+                if k not in monitor:
                     monitor[k] = 0.
                 monitor[k] += v
 
@@ -271,7 +271,7 @@ class Trainer(object):
 
                 disp_str = '#{}\ttrain: {:.4f}, {:.4f} | dev: {:.4f}, {:.4f} | best: {:.4f}'.format(
                     iter, train_loss, train_incorrect, dev_loss, dev_incorrect, min_dev_incorrect)
-                for k, v in monitor.items():
+                for k, v in list(monitor.items()):
                     disp_str += ' | {}: {:.4f}'.format(k, v / config.eval_period)
                 
                 disp_str += ' | [Eval] unl acc: {:.4f}, gen acc: {:.4f}, max unl acc: {:.4f}, max gen acc: {:.4f}'.format(unl_acc, gen_acc, max_unl_acc, max_gen_acc)
